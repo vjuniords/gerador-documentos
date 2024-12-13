@@ -1,0 +1,43 @@
+version: '1.0'
+name: gerador-documentos
+type: python
+runtime: python3.11
+
+self-hosted:
+  provider: custom
+  host: 157.173.100.205
+  port: 8000
+  ssh:
+    user: root
+    port: 22
+    # Substitua pelo caminho da sua chave SSH privada
+    key_path: ~/.ssh/id_rsa
+
+build:
+  steps:
+    - pip install -r requirements.txt
+
+deploy:
+  steps:
+    - gunicorn --workers 3 --bind 0.0.0.0:8000 app:app
+  target_directory: /opt/gerador-documentos
+
+environment:
+  FLASK_ENV: production
+  SECRET_KEY: ${SECRET_KEY}
+  DATABASE_URL: ${DATABASE_URL}
+
+ports:
+  - 8000
+
+scaling:
+  min: 1
+  max: 2
+
+monitoring:
+  enabled: true
+  alerts:
+    - type: cpu
+      threshold: 80%
+    - type: memory
+      threshold: 75%

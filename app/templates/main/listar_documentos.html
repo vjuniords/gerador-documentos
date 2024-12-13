@@ -1,0 +1,158 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <!-- Sidebar -->
+        <div class="col-md-3 col-lg-2 sidebar p-0">
+            <div class="d-flex flex-column p-3 h-100">
+                <a href="#" class="d-flex align-items-center mb-3 mb-md-0 me-md-auto text-decoration-none">
+                    <span class="fs-4">Documentos</span>
+                </a>
+                <hr>
+                <ul class="nav nav-pills flex-column mb-auto">
+                    <li class="nav-item">
+                        <a href="{{ url_for('main.dashboard') }}" class="nav-link">
+                            <i class="bi bi-house me-2"></i>
+                            Início
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{{ url_for('main.listar_documentos') }}" class="nav-link active" aria-current="page">
+                            <i class="bi bi-file-earmark-text me-2"></i>
+                            Meus Documentos
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{{ url_for('main.novo_documento') }}" class="nav-link">
+                            <i class="bi bi-plus-circle me-2"></i>
+                            Novo Documento
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#" class="nav-link">
+                            <i class="bi bi-gear me-2"></i>
+                            Configurações
+                        </a>
+                    </li>
+                </ul>
+                <hr>
+                <div class="dropdown">
+                    <a href="#" class="d-flex align-items-center text-decoration-none dropdown-toggle" id="dropdownUser" data-bs-toggle="dropdown" aria-expanded="false">
+                        <img src="https://github.com/mdo.png" alt="" width="32" height="32" class="rounded-circle me-2">
+                        <strong>{{ current_user.nome }}</strong>
+                    </a>
+                    <ul class="dropdown-menu text-small shadow" aria-labelledby="dropdownUser">
+                        <li><a class="dropdown-item" href="#">Perfil</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item" href="{{ url_for('auth.logout') }}">Sair</a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Conteúdo Principal -->
+        <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4 py-4">
+            <div class="row">
+                <div class="col-12">
+                    <div class="card card-custom">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h3 class="card-title mb-0">Meus Documentos</h3>
+                            <a href="{{ url_for('main.novo_documento') }}" class="btn btn-primary">
+                                <i class="bi bi-plus-circle me-2"></i>Novo Documento
+                            </a>
+                        </div>
+                        <div class="card-body">
+                            {% if documentos %}
+                            <div class="table-responsive">
+                                <table class="table table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th>Título</th>
+                                            <th>Tipo</th>
+                                            <th>Data de Criação</th>
+                                            <th>Ações</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for documento in documentos %}
+                                        <tr>
+                                            <td>{{ documento.titulo }}</td>
+                                            <td>{{ documento.tipo }}</td>
+                                            <td>{{ documento.data_criacao.strftime('%d/%m/%Y %H:%M') }}</td>
+                                            <td>
+                                                <div class="btn-group" role="group">
+                                                    <a href="{{ url_for('main.download_documento', documento_id=documento.id) }}" class="btn btn-sm btn-outline-primary">
+                                                        <i class="bi bi-download"></i> Baixar
+                                                    </a>
+                                                    <button class="btn btn-sm btn-outline-danger" onclick="excluirDocumento({{ documento.id }})">
+                                                        <i class="bi bi-trash"></i> Excluir
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                            {% else %}
+                            <div class="alert alert-info text-center">
+                                Você ainda não gerou nenhum documento. 
+                                <a href="{{ url_for('main.novo_documento') }}" class="alert-link">Crie seu primeiro documento!</a>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function excluirDocumento(documentoId) {
+    Swal.fire({
+        title: 'Tem certeza?',
+        text: 'Você não poderá reverter esta ação!',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#3085d6',
+        cancelButtonColor: '#d33',
+        confirmButtonText: 'Sim, excluir!',
+        cancelButtonText: 'Cancelar'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            fetch(`/excluir_documento/${documentoId}`, { method: 'DELETE' })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.sucesso) {
+                        Swal.fire(
+                            'Excluído!',
+                            'Seu documento foi excluído com sucesso.',
+                            'success'
+                        ).then(() => {
+                            location.reload();
+                        });
+                    } else {
+                        Swal.fire(
+                            'Erro',
+                            data.erro || 'Não foi possível excluir o documento.',
+                            'error'
+                        );
+                    }
+                })
+                .catch(error => {
+                    console.error('Erro:', error);
+                    Swal.fire(
+                        'Erro',
+                        'Ocorreu um erro ao tentar excluir o documento.',
+                        'error'
+                    );
+                });
+        }
+    });
+}
+</script>
+{% endblock %}

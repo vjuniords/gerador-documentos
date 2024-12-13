@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gerador de Contratos</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.ckeditor.com/ckeditor5/41.1.0/classic/ckeditor.js"></script>
+    <style>
+        body { 
+            background-color: #f4f6f9; 
+            padding-top: 50px;
+        }
+        .container {
+            max-width: 800px;
+            background-color: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .btn-primary {
+            background-color: #007bff;
+            border-color: #007bff;
+        }
+        #contratosList, #documentosList {
+            margin-top: 20px;
+        }
+        #editor {
+            min-height: 300px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2 class="text-center mb-4">Gerador de Contratos</h2>
+        
+        <form id="contratoForm">
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label for="nome_cliente" class="form-label">Nome do Cliente</label>
+                    <input type="text" class="form-control" id="nome_cliente" required>
+                </div>
+                
+                <div class="col-md-6 mb-3">
+                    <label for="tipo_evento" class="form-label">Tipo de Evento</label>
+                    <input type="text" class="form-control" id="tipo_evento" required>
+                </div>
+            </div>
+            
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label for="data_evento" class="form-label">Data do Evento</label>
+                    <input type="date" class="form-control" id="data_evento" required>
+                </div>
+                
+                <div class="col-md-6 mb-3">
+                    <label for="local" class="form-label">Local</label>
+                    <input type="text" class="form-control" id="local" required>
+                </div>
+            </div>
+            
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label for="valor_total" class="form-label">Valor Total</label>
+                    <input type="number" class="form-control" id="valor_total" required>
+                </div>
+                
+                <div class="col-md-6 mb-3">
+                    <label for="forma_pagamento" class="form-label">Forma de Pagamento</label>
+                    <select class="form-select" id="forma_pagamento" required>
+                        <option value="">Selecione</option>
+                        <option value="Dinheiro">Dinheiro</option>
+                        <option value="Pix">Pix</option>
+                        <option value="Cartão de Crédito">Cartão de Crédito</option>
+                        <option value="Cartão de Débito">Cartão de Débito</option>
+                        <option value="Transferência Bancária">Transferência Bancária</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="mb-3">
+                <label for="editor" class="form-label">Conteúdo do Contrato</label>
+                <div id="editor">
+                    Insira aqui os detalhes adicionais do contrato...
+                </div>
+            </div>
+            
+            <button type="submit" class="btn btn-primary w-100">Gerar Contrato</button>
+        </form>
+
+        <div id="mensagem" class="mt-3 text-center"></div>
+
+        <div class="mt-4">
+            <h3>Documentos Gerados</h3>
+            <ul id="documentosList" class="list-group"></ul>
+        </div>
+    </div>
+
+    <script>
+        // Inicializar CKEditor
+        let editor;
+        ClassicEditor
+            .create(document.querySelector('#editor'), {
+                toolbar: [
+                    'heading', '|', 
+                    'bold', 'italic', 'underline', '|',
+                    'bulletedList', 'numberedList', '|',
+                    'alignment', 'indent', 'outdent', '|',
+                    'undo', 'redo'
+                ]
+            })
+            .then(newEditor => {
+                editor = newEditor;
+            })
+            .catch(error => {
+                console.error(error);
+            });
+
+        document.getElementById('contratoForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const mensagemDiv = document.getElementById('mensagem');
+            mensagemDiv.innerHTML = '';
+
+            const dados = {
+                nome_cliente: document.getElementById('nome_cliente').value,
+                tipo_evento: document.getElementById('tipo_evento').value,
+                data_evento: document.getElementById('data_evento').value,
+                local: document.getElementById('local').value,
+                valor_total: document.getElementById('valor_total').value,
+                forma_pagamento: document.getElementById('forma_pagamento').value,
+                conteudo_documento: editor.getData()
+            };
+
+            try {
+                const resposta = await fetch('/criar_documento', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(dados)
+                });
+
+                const resultado = await resposta.json();
+
+                if (resposta.ok) {
+                    mensagemDiv.innerHTML = `
+                        <div class="alert alert-success">
+                            ${resultado.mensagem}
+                        </div>
+                    `;
+                    carregarDocumentos();
+                } else {
+                    mensagemDiv.innerHTML = `
+                        <div class="alert alert-danger">
+                            ${resultado.erro}
+                        </div>
+                    `;
+                }
+            } catch (erro) {
+                mensagemDiv.innerHTML = `
+                    <div class="alert alert-danger">
+                        Erro ao gerar documento: ${erro.message}
+                    </div>
+                `;
+            }
+        });
+
+        async function carregarDocumentos() {
+            const documentosList = document.getElementById('documentosList');
+            documentosList.innerHTML = '';
+
+            try {
+                const resposta = await fetch('/listar_contratos');
+                const documentos = await resposta.json();
+
+                documentos.forEach(documento => {
+                    const li = document.createElement('li');
+                    li.classList.add('list-group-item', 'd-flex', 'justify-content-between', 'align-items-center');
+                    
+                    const docx = documento.replace('.pdf', '.docx');
+                    
+                    li.innerHTML = `
+                        ${documento}
+                        <div>
+                            <a href="/download_contrato/${documento}" class="btn btn-sm btn-outline-primary me-2">
+                                PDF
+                            </a>
+                            <a href="/download_contrato/${docx}" class="btn btn-sm btn-outline-secondary">
+                                DOCX
+                            </a>
+                        </div>
+                    `;
+                    documentosList.appendChild(li);
+                });
+            } catch (erro) {
+                console.error('Erro ao carregar documentos:', erro);
+            }
+        }
+
+        // Carregar documentos ao iniciar
+        carregarDocumentos();
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

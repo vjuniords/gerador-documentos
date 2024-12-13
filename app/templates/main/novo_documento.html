@@ -1,0 +1,129 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row">
+        <div class="col-md-8 offset-md-2">
+            <div class="card card-custom">
+                <div class="card-body p-5">
+                    <h2 class="text-center mb-4">Criar Novo Documento</h2>
+                    
+                    <form id="documentoForm">
+                        <div class="mb-3">
+                            <label for="modelo" class="form-label">Selecione o Modelo</label>
+                            <select class="form-select" id="modelo" required>
+                                <option value="">Escolha um modelo</option>
+                                {% for modelo in modelos %}
+                                <option value="{{ modelo.id }}">{{ modelo.nome }} ({{ modelo.categoria }})</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div id="camposDinamicos"></div>
+
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary">Gerar Documento</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const modeloSelect = document.getElementById('modelo');
+    const camposDinamicos = document.getElementById('camposDinamicos');
+    const documentoForm = document.getElementById('documentoForm');
+
+    // Mapeamento de campos para diferentes tipos de documentos
+    const camposPorModelo = {
+        '1': [
+            { nome: 'nome_cliente', label: 'Nome do Cliente', tipo: 'text' },
+            { nome: 'cpf', label: 'CPF', tipo: 'text' },
+            { nome: 'valor_contrato', label: 'Valor do Contrato', tipo: 'number' }
+        ],
+        '2': [
+            { nome: 'nome_cliente', label: 'Nome do Locatário', tipo: 'text' },
+            { nome: 'cpf', label: 'CPF', tipo: 'text' },
+            { nome: 'valor_aluguel', label: 'Valor do Aluguel', tipo: 'number' }
+        ]
+    };
+
+    modeloSelect.addEventListener('change', function() {
+        const modeloId = this.value;
+        camposDinamicos.innerHTML = ''; // Limpar campos anteriores
+
+        if (modeloId && camposPorModelo[modeloId]) {
+            camposPorModelo[modeloId].forEach(campo => {
+                const div = document.createElement('div');
+                div.classList.add('mb-3');
+                
+                div.innerHTML = `
+                    <label for="${campo.nome}" class="form-label">${campo.label}</label>
+                    <input type="${campo.tipo}" class="form-control" id="${campo.nome}" name="${campo.nome}" required>
+                `;
+                
+                camposDinamicos.appendChild(div);
+            });
+        }
+    });
+
+    documentoForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+
+        const modeloId = modeloSelect.value;
+        const dados = {};
+
+        // Coletar dados dos campos dinâmicos
+        camposPorModelo[modeloId].forEach(campo => {
+            const input = document.getElementById(campo.nome);
+            dados[campo.nome] = input.value;
+        });
+
+        // Enviar dados para o servidor
+        fetch('/criar_documento', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                modelo_id: modeloId,
+                dados: dados,
+                titulo: `Documento ${modeloSelect.options[modeloSelect.selectedIndex].text}`
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.documento_id) {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Documento Gerado!',
+                    text: 'Seu documento foi criado com sucesso.',
+                    confirmButtonText: 'Ok'
+                }).then(() => {
+                    window.location.href = '/dashboard';
+                });
+            } else {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Erro',
+                    text: data.erro || 'Não foi possível gerar o documento'
+                });
+            }
+        })
+        .catch(error => {
+            console.error('Erro:', error);
+            Swal.fire({
+                icon: 'error',
+                title: 'Erro',
+                text: 'Ocorreu um erro ao tentar gerar o documento'
+            });
+        });
+    });
+});
+</script>
+{% endblock %}

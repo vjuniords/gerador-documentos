@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container-fluid p-0">
+    <section class="hero-section text-center text-white position-relative">
+        <div class="overlay"></div>
+        <div class="container position-relative">
+            <div class="row">
+                <div class="col-12">
+                    <h1 class="display-4 mb-4">Gerador de Documentos Inteligente</h1>
+                    <p class="lead mb-5">Crie, personalize e gere documentos em segundos</p>
+                    <div class="cta-buttons">
+                        <a href="{{ url_for('auth.login') }}" class="btn btn-primary btn-lg me-3">Entrar</a>
+                        <a href="{{ url_for('auth.cadastro') }}" class="btn btn-outline-light btn-lg">Cadastrar</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="features py-5">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-4 text-center">
+                    <div class="feature-icon mb-3">
+                        <i class="bi bi-file-earmark-text"></i>
+                    </div>
+                    <h3>Modelos Prontos</h3>
+                    <p>Escolha entre diversos modelos de documentos profissionais</p>
+                </div>
+                <div class="col-md-4 text-center">
+                    <div class="feature-icon mb-3">
+                        <i class="bi bi-lightning"></i>
+                    </div>
+                    <h3>Geração Rápida</h3>
+                    <p>Crie documentos personalizados em poucos cliques</p>
+                </div>
+                <div class="col-md-4 text-center">
+                    <div class="feature-icon mb-3">
+                        <i class="bi bi-shield-check"></i>
+                    </div>
+                    <h3>Segurança</h3>
+                    <p>Seus documentos são protegidos e confidenciais</p>
+                </div>
+            </div>
+        </div>
+    </section>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.hero-section {
+    position: relative;
+    background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+    padding: 150px 0;
+    overflow: hidden;
+}
+
+.hero-section .overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.3);
+}
+
+.feature-icon {
+    font-size: 3rem;
+    color: #2575fc;
+    margin-bottom: 1rem;
+}
+
+.features {
+    background-color: #f8f9fa;
+}
+</style>
+{% endblock %}

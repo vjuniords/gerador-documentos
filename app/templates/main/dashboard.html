@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <!-- Sidebar -->
+        <div class="col-md-3 col-lg-2 sidebar p-0">
+            <div class="d-flex flex-column p-3 h-100">
+                <a href="#" class="d-flex align-items-center mb-3 mb-md-0 me-md-auto text-decoration-none">
+                    <span class="fs-4">Documentos</span>
+                </a>
+                <hr>
+                <ul class="nav nav-pills flex-column mb-auto">
+                    <li class="nav-item">
+                        <a href="{{ url_for('main.dashboard') }}" class="nav-link active" aria-current="page">
+                            <i class="bi bi-house me-2"></i>
+                            Início
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{{ url_for('main.listar_documentos') }}" class="nav-link">
+                            <i class="bi bi-file-earmark-text me-2"></i>
+                            Meus Documentos
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{{ url_for('main.novo_documento') }}" class="nav-link">
+                            <i class="bi bi-plus-circle me-2"></i>
+                            Novo Documento
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#" class="nav-link">
+                            <i class="bi bi-gear me-2"></i>
+                            Configurações
+                        </a>
+                    </li>
+                </ul>
+                <hr>
+                <div class="dropdown">
+                    <a href="#" class="d-flex align-items-center text-decoration-none dropdown-toggle" id="dropdownUser" data-bs-toggle="dropdown" aria-expanded="false">
+                        <img src="https://github.com/mdo.png" alt="" width="32" height="32" class="rounded-circle me-2">
+                        <strong>{{ current_user.nome }}</strong>
+                    </a>
+                    <ul class="dropdown-menu text-small shadow" aria-labelledby="dropdownUser">
+                        <li><a class="dropdown-item" href="#">Perfil</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item" href="{{ url_for('auth.logout') }}">Sair</a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Conteúdo Principal -->
+        <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4 py-4">
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="card card-custom mb-4">
+                        <div class="card-body">
+                            <h5 class="card-title">Total de Documentos</h5>
+                            <p class="card-text display-6">{{ documentos|length }}</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card card-custom mb-4">
+                        <div class="card-body">
+                            <h5 class="card-title">Documentos Recentes</h5>
+                            <ul class="list-group list-group-flush">
+                                {% for documento in documentos[-3:] %}
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    {{ documento.titulo }}
+                                    <a href="{{ url_for('main.download_documento', documento_id=documento.id) }}" class="btn btn-sm btn-outline-primary">
+                                        <i class="bi bi-download"></i>
+                                    </a>
+                                </li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card card-custom mb-4">
+                        <div class="card-body">
+                            <h5 class="card-title">Ações Rápidas</h5>
+                            <div class="d-grid gap-2">
+                                <a href="{{ url_for('main.novo_documento') }}" class="btn btn-primary">
+                                    <i class="bi bi-plus-circle me-2"></i>Criar Documento
+                                </a>
+                                <a href="{{ url_for('main.listar_documentos') }}" class="btn btn-outline-secondary">
+                                    <i class="bi bi-list-check me-2"></i>Listar Documentos
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+</div>
+{% endblock %}
